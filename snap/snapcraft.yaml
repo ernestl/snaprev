@@ -1,11 +1,18 @@
 name: snaprev
+title: snaprev
 base: bare
+build-base: core24
 version: git
 summary: Inspect snap revision and version history
 description: |
   A CLI tool for inspecting the revision and version
   history of snaps published in the Snap Store.
 confinement: strict
+license: GPL-3.0
+contact: https://github.com/ernestl/snaprev/issues
+source-code: https://github.com/ernestl/snaprev
+issues: https://github.com/ernestl/snaprev/issues
+website: https://github.com/ernestl/snaprev#readme
 
 parts:
   snaprev:
@@ -15,7 +22,7 @@ parts:
       - go/latest/stable
     override-build: |
       VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo dev)
-      go build -ldflags "-X main.version=${VERSION}" \
+      CGO_ENABLED=0 go build -ldflags "-X main.version=${VERSION}" \
         -o ${CRAFT_PART_INSTALL}/bin/snaprev .
 
 apps:
