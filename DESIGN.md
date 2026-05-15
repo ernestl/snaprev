@@ -65,7 +65,11 @@ Macaroons are serialized with `base64.RawURLEncoding` (URL-safe, no padding) and
 
 Credentials are stored as JSON at `~/.local/share/snaprev/credentials.json` (or `$XDG_DATA_HOME/snaprev/credentials.json`) with `0600` permissions. The file contains the serialized root and discharge macaroons.
 
-The `SNAPREV_STORE_CREDENTIALS` environment variable overrides file-based storage. Its value is standard base64-encoded JSON with the same structure.
+The `SNAPREV_STORE_CREDENTIALS` environment variable overrides file-based storage. It auto-detects two formats:
+
+1. **Snapcraft export format** -- The INI-style output from `snapcraft export-login`, containing `macaroon` and `unbound_discharge` fields under `[login.ubuntu.com]`. This is the recommended approach for CI pipelines.
+
+2. **Base64-encoded JSON** -- Standard base64 encoding of the credentials JSON file (`{"r":"...","d":"..."}`). Useful for encoding the file snaprev itself creates.
 
 ### Auto-Refresh
 

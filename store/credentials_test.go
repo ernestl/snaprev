@@ -185,6 +185,63 @@ func TestDecodeEnvCredentialsInvalidJSON(t *testing.T) {
 	}
 }
 
+func TestParseSnapcraftCredentials(t *testing.T) {
+	input := "[login.ubuntu.com]\n" +
+		"macaroon = root-mac-value\n" +
+		"unbound_discharge = discharge-mac-value\n" +
+		"email = user@example.com\n"
+
+	creds, err := parseSnapcraftCredentials(input)
+	if err != nil {
+		t.Fatalf("parseSnapcraftCredentials failed: %v", err)
+	}
+	if creds.Root != "root-mac-value" {
+		t.Errorf("Root = %q, want %q", creds.Root, "root-mac-value")
+	}
+	if creds.Discharge != "discharge-mac-value" {
+		t.Errorf("Discharge = %q, want %q", creds.Discharge, "discharge-mac-value")
+	}
+}
+
+func TestParseSnapcraftCredentialsMissingFields(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"no macaroon", "[login.ubuntu.com]\nunbound_discharge = d\n"},
+		{"no discharge", "[login.ubuntu.com]\nmacaroon = r\n"},
+		{"empty", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := parseSnapcraftCredentials(tc.input)
+			if err == nil {
+				t.Fatal("expected error for incomplete credentials, got nil")
+			}
+		})
+	}
+}
+
+func TestLoadCredentialsFromSnapcraftEnvVar(t *testing.T) {
+	withTempDataHome(t)
+
+	snapcraftCreds := "[login.ubuntu.com]\n" +
+		"macaroon = sc-root\n" +
+		"unbound_discharge = sc-discharge\n"
+	os.Setenv(CredentialsEnvVar, snapcraftCreds)
+
+	loaded, err := LoadCredentials()
+	if err != nil {
+		t.Fatalf("LoadCredentials from snapcraft env var failed: %v", err)
+	}
+	if loaded.Root != "sc-root" {
+		t.Errorf("Root = %q, want %q", loaded.Root, "sc-root")
+	}
+	if loaded.Discharge != "sc-discharge" {
+		t.Errorf("Discharge = %q, want %q", loaded.Discharge, "sc-discharge")
+	}
+}
+
 func TestLoadCredentialsNoFile(t *testing.T) {
 	withTempDataHome(t)
 

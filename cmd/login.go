@@ -19,7 +19,7 @@ var loginCmd = &cobra.Command{
 credentials. Credentials are stored locally for subsequent use.
 
 You can also set the SNAPREV_STORE_CREDENTIALS environment variable
-with base64-encoded credentials to skip interactive login.`,
+with snapcraft export-login output to skip interactive login.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if store.CredentialsExist() {

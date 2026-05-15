@@ -43,8 +43,32 @@ This respects XDG_DATA_HOME. Expired discharge macaroons are
 refreshed automatically.
 
 Alternatively, set the SNAPREV_STORE_CREDENTIALS environment
-variable with base64-encoded JSON credentials to skip
-interactive login.
+variable to skip interactive login. This accepts two formats:
+
+**Snapcraft export (recommended for CI):**
+
+Export credentials with snapcraft and set the variable to the
+file contents:
+
+    snapcraft export-login --snaps <snap> \
+      --acls package_access credentials.txt
+    export SNAPREV_STORE_CREDENTIALS=$(cat credentials.txt)
+
+The exported file uses the INI-style format:
+
+    [login.ubuntu.com]
+    macaroon = <root macaroon>
+    unbound_discharge = <discharge macaroon>
+
+**Base64-encoded JSON:**
+
+Encode the credentials file that snaprev login creates:
+
+    export SNAPREV_STORE_CREDENTIALS=$(base64 -w0 \
+      ~/.local/share/snaprev/credentials.json)
+
+When set, the environment variable takes priority over the
+credentials file.
 
 To remove stored credentials:
 

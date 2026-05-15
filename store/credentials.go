@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Credentials holds the root and discharge macaroons for store authentication.
@@ -50,7 +51,8 @@ func SaveCredentials(root, discharge string) error {
 }
 
 // LoadCredentials returns stored credentials. It checks the environment
-// variable first (base64-encoded JSON), then falls back to the credentials file.
+// variable first (snapcraft export format or base64-encoded JSON), then
+// falls back to the credentials file.
 func LoadCredentials() (*Credentials, error) {
 	// Check environment variable first.
 	if envCreds := os.Getenv(CredentialsEnvVar); envCreds != "" {
@@ -95,12 +97,26 @@ func CredentialsExist() bool {
 	return err == nil
 }
 
-// decodeEnvCredentials decodes base64-encoded JSON credentials from
-// the environment variable.
-func decodeEnvCredentials(encoded string) (*Credentials, error) {
-	data, err := base64.StdEncoding.DecodeString(encoded)
+// decodeEnvCredentials decodes credentials from the environment variable.
+// It supports two formats:
+//
+//  1. Snapcraft export format (from "snapcraft export-login"):
+//     [login.ubuntu.com]
+//     macaroon = <root>
+//     unbound_discharge = <discharge>
+//
+//  2. Base64-encoded JSON (legacy snaprev format):
+//     base64({"r":"<root>","d":"<discharge>"})
+func decodeEnvCredentials(value string) (*Credentials, error) {
+	// Try snapcraft INI format first.
+	if creds, err := parseSnapcraftCredentials(value); err == nil {
+		return creds, nil
+	}
+
+	// Fall back to base64-encoded JSON.
+	data, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
-		return nil, fmt.Errorf("cannot decode %s: %w", CredentialsEnvVar, err)
+		return nil, fmt.Errorf("cannot decode %s: not a valid snapcraft export or base64 JSON", CredentialsEnvVar)
 	}
 
 	var creds Credentials
@@ -108,4 +124,31 @@ func decodeEnvCredentials(encoded string) (*Credentials, error) {
 		return nil, fmt.Errorf("cannot parse %s: %w", CredentialsEnvVar, err)
 	}
 	return &creds, nil
+}
+
+// parseSnapcraftCredentials parses the INI-style credential format
+// produced by "snapcraft export-login". The expected format is:
+//
+//	[login.ubuntu.com]
+//	macaroon = <serialized root macaroon>
+//	unbound_discharge = <serialized discharge macaroon>
+func parseSnapcraftCredentials(text string) (*Credentials, error) {
+	var root, discharge string
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(key) {
+		case "macaroon":
+			root = strings.TrimSpace(value)
+		case "unbound_discharge":
+			discharge = strings.TrimSpace(value)
+		}
+	}
+	if root == "" || discharge == "" {
+		return nil, fmt.Errorf("missing macaroon or unbound_discharge fields")
+	}
+	return &Credentials{Root: root, Discharge: discharge}, nil
 }
