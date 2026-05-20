@@ -186,7 +186,7 @@ snaps.
 2. Build the cache:
 
        revmap login
-       revmap cache-build
+       make cache
 
    This fetches the complete revision list and all individual
    revision details for each configured snap, writing
@@ -194,11 +194,15 @@ snaps.
 
    Options:
 
-       --workers N    concurrent detail fetches (default 10)
+       revmap cache-build --workers 20
 
 3. Build the snap (cache is bundled automatically):
 
        snapcraft
+
+   The `override-pull` step copies the pre-built `cache/`
+   directory into the build tree. Since `cache/` is gitignored,
+   it must exist locally before running `snapcraft`.
 
 ### Automated builds (CI / Launchpad)
 
@@ -217,7 +221,9 @@ only `package_access` permission and no 2FA.
 For Launchpad snap builds, store the credentials as build
 secrets (`store-email` and `store-password`). The
 `snapcraft.yaml` override-build step exports these as
-`REVMAP_EMAIL` and `REVMAP_PASSWORD` automatically.
+`REVMAP_EMAIL` and `REVMAP_PASSWORD` automatically. Since
+Launchpad clones from git (no local `cache/` directory),
+`cache-build` runs during the build using the secrets.
 
 If the build secrets are not configured, the snap will still
 build — it will just ship without a cache.
@@ -229,6 +235,7 @@ At runtime, revmap searches for cache files in order:
 1. `$SNAP/cache/<snap>.json.gz` (inside the snap)
 2. Next to the executable: `<exe-dir>/cache/<snap>.json.gz`
 3. Current working directory: `cache/<snap>.json.gz`
+4. Current working directory directly: `<snap>.json.gz`
 
 ### Cache contents
 
@@ -252,6 +259,12 @@ The `cache` target depends on `build` and runs
 
     revmap login
     make cache
+
+The full local snap build workflow:
+
+    revmap login          # one-time
+    make cache            # fetch and compress revision data
+    snapcraft             # builds snap with cache bundled
 
 ## Testing
 

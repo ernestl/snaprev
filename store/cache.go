@@ -64,7 +64,8 @@ func ReadCache(path string) (*CacheData, error) {
 }
 
 // FindCacheFile locates the cache file for a snap by searching known
-// locations: $SNAP/cache/, ./cache/, and next to the executable.
+// locations: $SNAP/cache/, ./cache/, next to the executable, and the
+// current working directory itself.
 func FindCacheFile(snapName string) string {
 	filename := snapName + ".json.gz"
 
@@ -84,10 +85,15 @@ func FindCacheFile(snapName string) string {
 		}
 	}
 
-	// Check current working directory.
+	// Check cache/ subdirectory of current working directory.
 	p := filepath.Join("cache", filename)
 	if _, err := os.Stat(p); err == nil {
 		return p
+	}
+
+	// Check current working directory directly (e.g. running from inside cache/).
+	if _, err := os.Stat(filename); err == nil {
+		return filename
 	}
 
 	return ""

@@ -25,17 +25,24 @@ parts:
     override-pull: |
       craftctl default
       craftctl set version="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+      # Copy pre-built cache into the build tree if it exists in the
+      # source directory (local builds with 'make cache' run beforehand).
+      if [ -d "${CRAFT_PROJECT_DIR}/cache" ]; then
+        cp -r "${CRAFT_PROJECT_DIR}/cache" .
+      fi
     override-build: |
       VERSION=$(craftctl get version)
       CGO_ENABLED=0 go build -ldflags "-X main.version=${VERSION}" \
         -o ${CRAFT_PART_INSTALL}/bin/revmap .
       install -m 755 demo.sh ${CRAFT_PART_INSTALL}/bin/demo.sh
 
-      # Build cache: uses existing login or env vars from build secrets.
-      # The account must not have 2FA enabled.
-      export REVMAP_EMAIL="$(craftctl get store-email 2>/dev/null || true)"
-      export REVMAP_PASSWORD="$(craftctl get store-password 2>/dev/null || true)"
-      ./revmap cache-build || echo "WARNING: cache-build failed, snap will ship without cache"
+      # Build cache if not already present (CI/LP path with build secrets).
+      # Locally, run 'make cache' before 'snapcraft' to pre-build.
+      if [ ! -d cache ]; then
+        export REVMAP_EMAIL="$(craftctl get store-email 2>/dev/null || true)"
+        export REVMAP_PASSWORD="$(craftctl get store-password 2>/dev/null || true)"
+        ./revmap cache-build || echo "WARNING: cache-build failed, snap will ship without cache"
+      fi
 
       if [ -d cache ]; then
         mkdir -p ${CRAFT_PART_INSTALL}/cache

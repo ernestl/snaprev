@@ -192,7 +192,8 @@ Both `list` and `show` commands implement a two-tier fallback to cached data:
 **Cache file resolution** (`store.FindCacheFile`): Searches in order:
 - `$SNAP/cache/<snap>.json.gz` (inside snap at runtime)
 - `<executable-dir>/cache/<snap>.json.gz`
-- `./cache/<snap>.json.gz` (development)
+- `./cache/<snap>.json.gz` (development, running from project root)
+- `./<snap>.json.gz` (running from inside the cache directory)
 
 **Local filtering on cached data** (`applyCacheTimeWindow`): When serving from cache, the same time window and limit flags (`--since`, `--until`, `--limit`, `--all`) are applied locally against the cached revision list. The default 90-day window is applied when no scope flags are given. Row filters (`--arch`, `--build`, `--version`, `--status`) work identically on cached data.
 
@@ -221,18 +222,32 @@ Not tested (require integration/real API): `store/revisions.go` (HTTP client met
 
 ## Snap Packaging
 
-The snap is built with `snapcraft` using `base: bare` (no runtime base snap) and `confinement: strict`. The `override-build` step:
+The snap is built with `snapcraft` using `base: bare` (no runtime base snap) and `confinement: strict`. The build process:
 
+**`override-pull`:**
+1. Clones from git (LP) or copies local source
+2. Sets version from `git describe`
+3. Copies pre-built `cache/` from `$CRAFT_PROJECT_DIR` into the build tree (local builds only — this directory is gitignored, so it only exists when `make cache` was run beforehand)
+
+**`override-build`:**
 1. Compiles the Go binary with version from `git describe`
 2. Installs `demo.sh` to `$SNAP/bin/`
-3. Copies `cache/*.json.gz` to `$SNAP/cache/` (if present)
+3. If no `cache/` directory exists (LP/CI path), attempts to run `cache-build` using `REVMAP_EMAIL`/`REVMAP_PASSWORD` from build secrets. The account must not have 2FA enabled.
+4. Copies `cache/*.json.gz` to `$SNAP/cache/` (if present)
 
 The snap only requires the `network` plug for store API access. When running from cache, no network access is needed (though the plug is still declared).
 
-Pre-build workflow:
+**Local build workflow:**
 
 ```
-revmap login
-make cache          # builds binary + runs cache-build
-snapcraft           # produces the .snap file
+revmap login            # one-time interactive login
+make cache              # builds binary + fetches all revision data
+snapcraft               # override-pull copies cache/, produces .snap
+```
+
+**Launchpad build workflow:**
+
+```
+# Build secrets configured: store-email, store-password (no 2FA account)
+# On push: LP clones from git, override-build runs cache-build with secrets
 ```
