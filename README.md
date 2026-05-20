@@ -218,15 +218,18 @@ enabled. A 2FA-enabled account will fail with "two-factor
 authentication required". Use a dedicated service account with
 only `package_access` permission and no 2FA.
 
-For Launchpad snap builds, store the credentials as build
-secrets (`store-email` and `store-password`). The
-`snapcraft.yaml` override-build step exports these as
-`REVMAP_EMAIL` and `REVMAP_PASSWORD` automatically. Since
-Launchpad clones from git (no local `cache/` directory),
-`cache-build` runs during the build using the secrets.
+Launchpad does not support injecting secrets into snap builds.
+To ship cache in an LP-built snap, either:
 
-If the build secrets are not configured, the snap will still
-build — it will just ship without a cache.
+- Run `make cache` locally before `snapcraft` (the
+  `override-pull` stage copies it into the build tree via
+  `$CRAFT_PROJECT_DIR`), or
+- Use a CI system with secrets support (e.g. GitHub Actions)
+  to run `cache-build` and then invoke `snapcraft`.
+
+If no cache is present, the snap still builds and works — it
+just requires network access and store authentication for all
+queries.
 
 ### Cache location
 

@@ -232,12 +232,11 @@ The snap is built with `snapcraft` using `base: bare` (no runtime base snap) and
 **`override-build`:**
 1. Compiles the Go binary with version from `git describe`
 2. Installs `demo.sh` to `$SNAP/bin/`
-3. If no `cache/` directory exists (LP/CI path), attempts to run `cache-build` using `REVMAP_EMAIL`/`REVMAP_PASSWORD` from build secrets. The account must not have 2FA enabled.
-4. Copies `cache/*.json.gz` to `$SNAP/cache/` (if present)
+3. Copies `cache/*.json.gz` to `$SNAP/cache/` (if present)
 
 The snap only requires the `network` plug for store API access. When running from cache, no network access is needed (though the plug is still declared).
 
-**Local build workflow:**
+**Build workflow (local snapcraft or LP):**
 
 ```
 revmap login            # one-time interactive login
@@ -245,9 +244,4 @@ make cache              # builds binary + fetches all revision data
 snapcraft               # override-pull copies cache/, produces .snap
 ```
 
-**Launchpad build workflow:**
-
-```
-# Build secrets configured: store-email, store-password (no 2FA account)
-# On push: LP clones from git, override-build runs cache-build with secrets
-```
+Launchpad builds clone from git and will not have the `cache/` directory (it is gitignored). To ship cache in an LP-built snap, commit the cache files or use a CI pipeline that runs `make cache` before `snapcraft`.
