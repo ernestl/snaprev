@@ -49,7 +49,7 @@ When installed as a snap:
 This respects XDG_DATA_HOME. Expired discharge macaroons are
 refreshed automatically.
 
-Alternatively, set the REVMAP_STORE_CREDENTIALS environment
+Alternatively, set the SNAPCRAFT_STORE_CREDENTIALS environment
 variable to skip interactive login. This accepts two formats:
 
 **Snapcraft export (recommended for CI):**
@@ -59,7 +59,7 @@ file contents:
 
     snapcraft export-login --snaps <snap> \
       --acls package_access credentials.txt
-    export REVMAP_STORE_CREDENTIALS=$(cat credentials.txt)
+    export SNAPCRAFT_STORE_CREDENTIALS=$(cat credentials.txt)
 
 The exported file uses the INI-style format:
 
@@ -71,7 +71,7 @@ The exported file uses the INI-style format:
 
 Encode the credentials file that revmap login creates:
 
-    export REVMAP_STORE_CREDENTIALS=$(base64 -w0 \
+    export SNAPCRAFT_STORE_CREDENTIALS=$(base64 -w0 \
       ~/.local/share/revmap/credentials.json)
 
 When set, the environment variable takes priority over the

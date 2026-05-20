@@ -23,5 +23,7 @@ const (
 	AppName = "revmap"
 
 	// CredentialsEnvVar is the environment variable for credential override.
-	CredentialsEnvVar = "REVMAP_STORE_CREDENTIALS"
+	// Uses the same variable as snapcraft so a single exported credential
+	// works for both tools.
+	CredentialsEnvVar = "SNAPCRAFT_STORE_CREDENTIALS"
 )

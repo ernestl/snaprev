@@ -77,7 +77,7 @@ The credentials file path is resolved with the following priority:
 
 The file contains JSON with the serialized root and discharge macaroons (`{"r":"...","d":"..."}`), written with `0600` permissions.
 
-The `REVMAP_STORE_CREDENTIALS` environment variable overrides file-based storage. It auto-detects two formats:
+The `SNAPCRAFT_STORE_CREDENTIALS` environment variable overrides file-based storage. It auto-detects two formats:
 
 1. **Snapcraft export format** -- The INI-style output from `snapcraft export-login`, containing `macaroon` and `unbound_discharge` fields under `[login.ubuntu.com]`. This is the recommended approach for CI pipelines.
 
@@ -155,7 +155,7 @@ Fetches a single revision by number and outputs the JSON response. The `--fields
 
 Fetches the complete revision history and individual revision details for all snaps listed in `cache-snaps.json`, writing compressed cache files to `cache/`.
 
-**Authentication:** If credentials already exist (user ran `revmap login` or `REVMAP_STORE_CREDENTIALS` is set), they are used directly. Otherwise, `cache-build` checks for `REVMAP_EMAIL` and `REVMAP_PASSWORD` environment variables and performs a non-interactive login via `store.Login(email, password, "")`. The OTP parameter is always empty — the account must not have two-factor authentication enabled. A 2FA-enabled account will return `ErrTwoFactorRequired`, surfaced as `"automatic login failed: two-factor authentication required"`.
+**Authentication:** If credentials already exist (user ran `revmap login` or `SNAPCRAFT_STORE_CREDENTIALS` is set), they are used directly. Otherwise, `cache-build` checks for `REVMAP_EMAIL` and `REVMAP_PASSWORD` environment variables and performs a non-interactive login via `store.Login(email, password, "")`. The OTP parameter is always empty — the account must not have two-factor authentication enabled. A 2FA-enabled account will return `ErrTwoFactorRequired`, surfaced as `"automatic login failed: two-factor authentication required"`.
 
 **Workflow:**
 1. Authenticates (existing credentials or env-var login)

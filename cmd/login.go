@@ -18,7 +18,7 @@ var loginCmd = &cobra.Command{
 	Long: `Authenticate with the Snap Store using your Ubuntu One SSO
 credentials. Credentials are stored locally for subsequent use.
 
-You can also set the REVMAP_STORE_CREDENTIALS environment variable
+You can also set the SNAPCRAFT_STORE_CREDENTIALS environment variable
 with snapcraft export-login output to skip interactive login.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -15,5 +15,5 @@ test:
 check:
 	./checks.sh
 
-cache: build
-	./revmap cache-build
+cache:
+	go run ./cmd/cache-build
