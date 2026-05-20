@@ -23,7 +23,19 @@ parts:
       - go/latest/stable
     override-pull: |
       craftctl default
-      craftctl set version="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+      tag="$(git describe --tags --abbrev=0 2>/dev/null || echo 0.0.0)"
+      if git describe --tags --exact-match HEAD >/dev/null 2>&1; then
+        # Exactly on a tag
+        version="${tag}"
+      else
+        # Not on a tag: tag + short commit hash
+        commit="$(git rev-parse --short HEAD)"
+        version="${tag}+${commit}"
+      fi
+      if [ -n "${REVMAP_BUILD_DATE:-}" ]; then
+        version="${version}+${REVMAP_BUILD_DATE}"
+      fi
+      craftctl set version="$version"
       # Copy pre-built cache into the build tree if it exists in the
       # source directory (local builds with 'make cache' run beforehand).
       if [ -d "${CRAFT_PROJECT_DIR}/cache" ]; then
