@@ -33,6 +33,7 @@ parts:
     override-build: |
       VERSION=$(craftctl get version)
       CGO_ENABLED=0 go build -ldflags "-X main.version=${VERSION}" -o revmap .
+      mkdir -p ${CRAFT_PART_INSTALL}/bin
       install -m 755 revmap ${CRAFT_PART_INSTALL}/bin/revmap
       install -m 755 demo.sh ${CRAFT_PART_INSTALL}/bin/demo.sh
 
