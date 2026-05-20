@@ -39,7 +39,7 @@ without pauses.`,
 			cmdArgs = []string{script}
 		}
 
-		c := exec.Command("bash", cmdArgs...)
+		c := exec.Command("/bin/bash", cmdArgs...)
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
